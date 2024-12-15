@@ -1,14 +1,8 @@
 package haui.android.taskmanager.notification;
 
-import static android.content.ContentValues.TAG;
-import static androidx.core.content.ContentProviderCompat.requireContext;
-
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
-import android.view.View;
-import android.widget.Toast;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -16,24 +10,10 @@ import java.util.Date;
 
 import haui.android.taskmanager.controller.DBHelper;
 import haui.android.taskmanager.models.Task;
-import haui.android.taskmanager.views.EditTaskFragment;
-
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.pm.PackageManager;
-import androidx.core.app.ActivityCompat;
-import androidx.core.app.NotificationCompat;
-import androidx.core.app.NotificationManagerCompat;
-import android.app.PendingIntent;
-
-import haui.android.taskmanager.R;
 
 public class DoneTaskActionReceiver extends BroadcastReceiver {
-
     @Override
     public void onReceive(Context context, Intent intent) {
-
         int taskID = intent.getIntExtra("notificationId", 0) - 1000;
         if (taskID > 500) { taskID -= 999; }
 
@@ -73,6 +53,5 @@ public class DoneTaskActionReceiver extends BroadcastReceiver {
         } catch (ParseException e) {
             throw new RuntimeException(e);
         }
-
     }
 }

@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.Intent;
 
 public class RepeatNotiActionReceiver extends BroadcastReceiver {
-
     @Override
     public void onReceive(Context context, Intent intent) {
         // Handle the button press

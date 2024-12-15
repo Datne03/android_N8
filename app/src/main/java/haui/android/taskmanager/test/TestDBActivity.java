@@ -1,9 +1,10 @@
 package haui.android.taskmanager.test;
 
-
 import android.os.Bundle;
 import android.util.Log;
+
 import androidx.appcompat.app.AppCompatActivity;
+
 import java.util.List;
 
 import haui.android.taskmanager.R;
@@ -149,5 +150,4 @@ public class TestDBActivity extends AppCompatActivity {
 
         Log.d(TAG, "======END TEST=======");
     }
-
 }

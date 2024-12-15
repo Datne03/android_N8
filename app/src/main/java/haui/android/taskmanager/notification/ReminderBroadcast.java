@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
@@ -15,7 +16,6 @@ import haui.android.taskmanager.R;
 import haui.android.taskmanager.controller.DBHelper;
 
 public class ReminderBroadcast extends BroadcastReceiver {
-
     @Override
     public void onReceive(Context context, Intent intent) {
         String channelId = intent.getStringExtra("channelId");

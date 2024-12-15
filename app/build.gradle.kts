@@ -8,7 +8,7 @@ android {
 
     defaultConfig {
         applicationId = "haui.android.taskmanager"
-        minSdk = 21
+        minSdk = 26
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -67,4 +67,7 @@ dependencies {
     implementation("androidx.navigation:navigation-ui:2.7.6")
 
     implementation("com.android.support:support-compat:28.0.0")
+
+    implementation("org.projectlombok:lombok:1.18.30")
+    annotationProcessor("org.projectlombok:lombok:1.18.30")
 }

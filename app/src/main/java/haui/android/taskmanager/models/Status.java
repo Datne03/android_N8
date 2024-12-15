@@ -1,30 +1,16 @@
 package haui.android.taskmanager.models;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.FieldDefaults;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor(force = true)
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class Status {
-    private int statusID;
-    private String statusName;
-
-    public Status() {
-    }
-
-    public Status(int statusID, String statusName) {
-        this.statusID = statusID;
-        this.statusName = statusName;
-    }
-
-    public int getStatusID() {
-        return statusID;
-    }
-
-    public void setStatusID(int statusID) {
-        this.statusID = statusID;
-    }
-
-    public String getStatusName() {
-        return statusName;
-    }
-
-    public void setStatusName(String statusName) {
-        this.statusName = statusName;
-    }
+    int statusID;
+    String statusName;
 }

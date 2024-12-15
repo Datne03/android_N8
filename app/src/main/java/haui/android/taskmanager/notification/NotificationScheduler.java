@@ -6,18 +6,9 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.os.Build;
 
-import androidx.core.app.ActivityCompat;
-import androidx.core.app.NotificationCompat;
-import androidx.core.app.NotificationManagerCompat;
-
-import haui.android.taskmanager.R;
-import haui.android.taskmanager.test.TestNotificationActivity;
-
 public class NotificationScheduler {
-
     private Context context;
 
     public NotificationScheduler(Context context) {
@@ -65,6 +56,4 @@ public class NotificationScheduler {
         long triggerAtMillis = System.currentTimeMillis() + delayInMillis;
         alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent);
     }
-
-
 }

@@ -10,12 +10,11 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 
-import haui.android.taskmanager.notification.NotificationScheduler;
 import haui.android.taskmanager.R;
+import haui.android.taskmanager.notification.NotificationScheduler;
 import haui.android.taskmanager.views.EditTaskFragment;
 
 public class TestNotificationActivity extends AppCompatActivity {
-
     private NotificationScheduler notificationScheduler;
 
     @Override
