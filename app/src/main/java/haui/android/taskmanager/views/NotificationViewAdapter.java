@@ -7,30 +7,21 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
-import androidx.annotation.NonNull;
-
 import java.util.List;
 
 import haui.android.taskmanager.R;
 import haui.android.taskmanager.models.Notification;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
 
-@FieldDefaults(level = AccessLevel.PRIVATE)
 public class NotificationViewAdapter extends ArrayAdapter<Notification> {
-    Context context;
-    List<Notification>notifications ;
+    private Context context;
+    private List<Notification> notifications;
 
-    public NotificationViewAdapter(@NonNull Context context, List<Notification>notifications) {
-        super(context,0,notifications);
+    public NotificationViewAdapter(Context context, List<Notification> notifications) {
+        super(context, 0, notifications);
         this.context = context;
         this.notifications = notifications;
     }
+
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         Notification notification = getItem(position);
@@ -49,5 +40,5 @@ public class NotificationViewAdapter extends ArrayAdapter<Notification> {
 
         return convertView;
     }
-
 }
+

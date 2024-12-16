@@ -21,13 +21,20 @@ import haui.android.taskmanager.R;
 import haui.android.taskmanager.controller.DBHelper;
 import haui.android.taskmanager.models.Notification;
 
+/**
+ * A simple {@link Fragment} subclass.
+ * Use the {@link SearchTaskFragment#newInstance} factory method to
+ * create an instance of this fragment.
+ */
 public class SearchNotificationFragment extends Fragment {
+
     AppCompatButton btnSearch;
     EditText textSearch;
     ListView listView;
     List<Notification> notificationArrayList = new ArrayList<Notification>();
     NotificationViewAdapter arrayAdapter = null;
     DBHelper dbHelper;
+
 
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER

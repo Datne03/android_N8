@@ -26,6 +26,7 @@ import haui.android.taskmanager.controller.DBHelper;
 import haui.android.taskmanager.models.Notification;
 
 public class ListNotificationFragment extends Fragment {
+
     AppCompatButton btnAll, btnToday, btnPast7days, btnPast30days;
     AppCompatImageView btnSearch;
     LinearLayout linearLayoutList;
@@ -224,3 +225,4 @@ public class ListNotificationFragment extends Fragment {
                 .show();
     }
 }
+

@@ -34,7 +34,7 @@ import haui.android.taskmanager.models.Tag;
 import haui.android.taskmanager.models.Task;
 import haui.android.taskmanager.models.TaskDetail;
 
-public class HomeFragment extends Fragment {
+public class HomeFragment extends Fragment{
     DBHelper dbHelper;
     RecyclerView rcv_ingrogres, rcv_task_group;
     ProgressBar home_progress_circular1;
