@@ -64,7 +64,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:weightSum="2">
+            android:weightSum="1">
 
             <!-- Create Task Button -->
             <TextView
@@ -83,20 +83,6 @@
                 android:layout_margin="8dp" />
 
             <!-- Edit Template Button -->
-            <TextView
-                android:id="@+id/btnEditTemplate"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:padding="12dp"
-                android:background="@drawable/submenu_rounded_card"
-                android:text="Sửa tệp mẫu"
-                android:textColor="#1d6d43"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:drawableLeft="@drawable/navbar_ic_excel"
-                android:layout_margin="8dp" />
         </LinearLayout>
 
 
