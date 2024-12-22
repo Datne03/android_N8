@@ -1,18 +1,26 @@
 package haui.android.taskmanager.views;
 
-import android.app.AlertDialog;
-import android.content.DialogInterface;
+import android.graphics.Color;
+import android.graphics.PorterDuff;
 import android.os.Bundle;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.Toast;
+import android.widget.TextView;
 
-import androidx.appcompat.widget.AppCompatButton;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SearchView;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.view.MenuProvider;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.Lifecycle;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,14 +35,13 @@ import haui.android.taskmanager.models.Task;
  * create an instance of this fragment.
  */
 public class SearchTaskFragment extends Fragment {
+    Toolbar mToolbarSearch;
+    TextView emptySearchView;
 
-    AppCompatButton btnSearch;
-    EditText textSearch;
     ListView listView;
     List<Task> taskArrayList = new ArrayList<Task>();
     TaskViewAdapter arrayAdapter = null;
     DBHelper dbHelper;
-
 
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -76,10 +83,96 @@ public class SearchTaskFragment extends Fragment {
         }
     }
 
-    private void initView(View view){
-        btnSearch = view.findViewById(R.id.search_task_btn);
-        textSearch = view.findViewById(R.id.search_task_text);
+    private void setUpMenu(View view) {
+        // Cài đặt Toolbar vào Fragment
+        ((AppCompatActivity) requireActivity()).setSupportActionBar(mToolbarSearch);
+
+        // Tùy chỉnh Toolbar
+        mToolbarSearch.setCollapseIcon(R.drawable.baseline_arrow_back_24);
+        mToolbarSearch.setNavigationIcon(R.drawable.baseline_close_32);
+
+        mToolbarSearch.setNavigationOnClickListener(v -> {
+//                backToTaskListFragment(new ListTaskFragment());
+            // Vì ở ListFragment đã thên vào backstack rồi nên chỉ cần quay lại là được
+            requireActivity().getSupportFragmentManager().popBackStack();
+        });
+
+        // Menu cũ bị deprecated, dùng cái này để quaản lý menu
+        // Đăng ký MenuProvider
+        requireActivity().addMenuProvider(new MenuProvider() {
+            @Override
+            public void onCreateMenu(@NonNull Menu menu, @NonNull MenuInflater menuInflater) {
+                // Tạo menu
+                menuInflater.inflate(R.menu.search_task_menu, menu);
+                MenuItem searchItem = menu.findItem(R.id.action_search_task);
+
+                SearchView searchView = (SearchView) searchItem.getActionView();
+
+                if (searchView != null) {
+                    ImageView clearButton = searchView.findViewById(androidx.appcompat.R.id.search_close_btn);
+                    if (clearButton != null) {
+                        clearButton.setColorFilter(Color.WHITE, PorterDuff.Mode.SRC_IN); // Thay đổi màu sắc ở đây
+                    }
+                    // Mở rộng SearchView ngay lập tức
+                    searchItem.expandActionView();
+                    searchView.requestFocus();
+
+                    searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+                        @Override
+                        public boolean onQueryTextSubmit(String query) {
+                            List<Task> newList = dbHelper.searchTasks(query);
+                            upDateTaskList(newList);
+                            checkEmptyView(query);
+                            return false;
+                        }
+
+                        @Override
+                        public boolean onQueryTextChange(String newText) {
+                            return false;
+                        }
+                    });
+                }
+            }
+
+            @Override
+            public void onPrepareMenu(@NonNull Menu menu) {
+                MenuProvider.super.onPrepareMenu(menu);
+            }
+
+            @Override
+            public boolean onMenuItemSelected(@NonNull MenuItem item) {
+                return false;
+            }
+
+        }, getViewLifecycleOwner(), Lifecycle.State.RESUMED);
+
+    }
+
+
+    private void initView(View view) {
+        mToolbarSearch = view.findViewById(R.id.m_toolbar_search);
+        emptySearchView = view.findViewById(R.id.empty_search_view);
         listView = view.findViewById(R.id.search_task_listview);
+
+        setUpMenu(view);
+    }
+
+    // Hàm kiểm tra dữ liệu để hiển thị Empty View
+    private void checkEmptyView(String query) {
+        if (taskArrayList.isEmpty()) {
+            listView.setVisibility(View.GONE);
+            emptySearchView.setText("Không tìm thấy mục nào cho '" + query + "'");
+            emptySearchView.setVisibility(View.VISIBLE);
+        } else {
+            listView.setVisibility(View.VISIBLE);
+            emptySearchView.setVisibility(View.GONE);
+        }
+    }
+
+    private void upDateTaskList(List<Task> newList) {
+        taskArrayList.clear();
+        taskArrayList.addAll(newList);
+        arrayAdapter.notifyDataSetChanged();
     }
 
     @Override
@@ -87,73 +180,26 @@ public class SearchTaskFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_search_task, container, false);
-
         initView(view);
         dbHelper = new DBHelper(getContext());
 
-        btnSearch.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if(textSearch.getText().toString().isEmpty()){
-                    Toast.makeText(getActivity(), "Vui lòng nhập tên công việc cần tìm", Toast.LENGTH_SHORT).show();
-                }else {
-                    taskArrayList.clear();
-                    taskArrayList = dbHelper.searchTasks(textSearch.getText().toString());
-                    if(taskArrayList == null){
-                        Toast.makeText(getActivity(), "Không có công việc cần tìm", Toast.LENGTH_SHORT).show();
-                    }else {
-                        arrayAdapter = new TaskViewAdapter(getActivity(), taskArrayList);
-                        listView.setAdapter(arrayAdapter);
-                    }
-                }
-            }
-        });
+        arrayAdapter = new TaskViewAdapter(requireContext(), taskArrayList);
+        listView.setAdapter(arrayAdapter);
 
+        listView.setEmptyView(emptySearchView);
+        emptySearchView.setVisibility(View.GONE);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 String data = String.valueOf(taskArrayList.get(position).getTaskID());
 
                 Fragment editTaskFragment = EditTaskFragment.newInstance(data);
-                getActivity().getSupportFragmentManager().beginTransaction()
+                requireActivity().getSupportFragmentManager().beginTransaction()
                         .replace(R.id.fragment_container, editTaskFragment)
                         .addToBackStack(null)
                         .commit();
             }
         });
-
-        listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-            @Override
-            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-                showDeleteConfirmationDialog(position);
-                return true;
-            }
-        });
-
-
         return view;
-    }
-
-    private void showDeleteConfirmationDialog(int position) {
-        new AlertDialog.Builder(getActivity())
-                .setTitle("Delete Confirmation")
-                .setMessage("Bạn có chắc chắn xóa công việc này không?")
-                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
-                    private DialogInterface dialog;
-                    private int which;
-
-                    public void onClick(DialogInterface dialog, int which) {
-                        this.dialog = dialog;
-                        this.which = which;
-                        // Remove the item from the list
-                        dbHelper.deleteTask(taskArrayList.get(position).getTaskID());
-                        taskArrayList.remove(position);
-                        arrayAdapter.notifyDataSetChanged();
-                        Toast.makeText(getActivity(), "Xóa thành công.", Toast.LENGTH_SHORT).show();
-                    }
-                })
-                .setNegativeButton(android.R.string.no, null)
-                .setIcon(android.R.drawable.ic_delete)
-                .show();
     }
 }

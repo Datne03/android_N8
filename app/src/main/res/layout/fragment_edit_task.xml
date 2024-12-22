@@ -1,223 +1,194 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/edit_task_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:focusableInTouchMode="true">
+    android:focusableInTouchMode="true"
+    android:orientation="vertical">
 
-    <LinearLayout
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/m_toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="?attr/colorPrimary"
+        android:minHeight="?attr/actionBarSize"
+        android:theme="?attr/actionBarTheme"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:titleTextColor="@color/white" />
+
+    <Spinner
+        android:id="@+id/edit_spinner"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:layout_marginStart="14dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="14dp"
+        android:background="@drawable/border_edit_spinner"
+        android:dropDownWidth="wrap_content"
+        android:dropDownVerticalOffset="60dp"
+        android:inputType="none"
+        android:spinnerMode="dropdown"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/m_toolbar" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/textInputLayout2"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="14dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="14dp"
+        android:hint="@string/name"
+        app:layout_constraintEnd_toEndOf="@+id/edit_spinner"
+        app:layout_constraintStart_toStartOf="@+id/edit_spinner"
+        app:layout_constraintTop_toBottomOf="@+id/edit_spinner"
+        app:startIconDrawable="@drawable/edit_task_ic_pency">
+
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/edit_title_task"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:enabled="false"
+            android:inputType="text"
+            android:paddingStart="40dp" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/textInputLayout"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="14dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="14dp"
+        android:hint="@string/description"
+        app:layout_constraintEnd_toEndOf="@+id/textInputLayout2"
+        app:layout_constraintStart_toStartOf="@+id/textInputLayout2"
+        app:layout_constraintTop_toBottomOf="@id/textInputLayout2">
+
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/edit_decription_task"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="top"
+            android:inputType="textMultiLine"
+            android:lines="7"
+            android:overScrollMode="always"
+            android:scrollbarStyle="insideInset"
+            android:scrollbars="vertical"
+            android:scrollHorizontally="false" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/textInputLayout3"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
         android:layout_weight="1"
-        android:orientation="vertical">
+        android:hint="@string/datestart"
+        android:focusable="false"
+        app:layout_constraintStart_toStartOf="@+id/textInputLayout"
+        app:layout_constraintTop_toBottomOf="@+id/textInputLayout"
+        app:startIconDrawable="@drawable/create_task_ic_date">
 
-        <TableRow
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/edit_date_start"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="16dp"
-            android:layout_marginEnd="16dp"
-            android:background="@drawable/border_edit_spinner"
-            android:gravity="center_vertical">
+            android:inputType="none"
+            android:minWidth="180dp"
+            android:focusable="false"
+            android:paddingStart="40dp" />
+    </com.google.android.material.textfield.TextInputLayout>
 
-            <Spinner
-                android:id="@+id/edit_spinner"
-                android:layout_width="match_parent"
-                android:layout_height="60dp"
-                android:inputType="none" />
-
-
-        </TableRow>
-
-        <com.google.android.material.textfield.TextInputLayout
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="16dp"
-            android:layout_marginEnd="16dp"
-            android:hint="@string/name"
-            app:startIconDrawable="@drawable/edit_task_ic_pency">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/edit_title_task"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:enabled="false"
-                android:inputType="text"
-                android:paddingStart="40dp" />
-
-
-        </com.google.android.material.textfield.TextInputLayout>
-
-
-        <com.google.android.material.textfield.TextInputLayout
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="16dp"
-            android:layout_marginEnd="16dp"
-            android:hint="@string/description">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/edit_decription_task"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="top"
-                android:inputType="textMultiLine"
-                android:lines="7"
-                android:overScrollMode="always"
-                android:scrollbarStyle="insideInset"
-                android:scrollbars="vertical"
-                android:scrollHorizontally="false" />
-
-
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <TableRow
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
-
-            <com.google.android.material.textfield.TextInputLayout
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginTop="16dp"
-                android:layout_marginEnd="16dp"
-                android:layout_weight="1"
-                android:hint="@string/datestart"
-                app:startIconDrawable="@drawable/create_task_ic_date">
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/edit_date_start"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="text"
-                    android:paddingStart="40dp" />
-
-
-            </com.google.android.material.textfield.TextInputLayout>
-
-            <com.google.android.material.textfield.TextInputLayout
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginTop="16dp"
-                android:layout_marginEnd="16dp"
-                android:layout_weight="1.1"
-                android:hint="@string/timestart"
-                app:startIconDrawable="@drawable/create_task_ic_time">
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/edit_time_start"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="text"
-                    android:paddingStart="40dp" />
-
-
-            </com.google.android.material.textfield.TextInputLayout>
-
-        </TableRow>
-
-        <TableRow
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
-
-            <com.google.android.material.textfield.TextInputLayout
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginTop="16dp"
-                android:layout_marginEnd="16dp"
-                android:layout_weight="1"
-                android:hint="@string/dateend"
-                app:startIconDrawable="@drawable/create_task_ic_date">
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/edit_date_end"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="text"
-                    android:paddingStart="40dp" />
-
-
-            </com.google.android.material.textfield.TextInputLayout>
-
-            <com.google.android.material.textfield.TextInputLayout
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginTop="16dp"
-                android:layout_marginEnd="16dp"
-                android:layout_weight="1.1"
-                android:hint="@string/timeend"
-                app:startIconDrawable="@drawable/create_task_ic_time">
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/edit_btn_time_end"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="text"
-                    android:paddingStart="40dp" />
-
-
-            </com.google.android.material.textfield.TextInputLayout>
-
-        </TableRow>
-
-        <TableRow
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="16dp"
-            android:layout_marginTop="0dp"
-            android:orientation="vertical">
-
-            <CheckBox
-                android:id="@+id/edit_check_working"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Đang làm công việc này"
-                android:textSize="18sp"
-                android:textColor="#3C3C3C"
-                />
-
-        </TableRow>
-
-    </LinearLayout>
-
-    <TableRow
-        android:layout_width="match_parent"
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/textInputLayout5"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:gravity="end"
-        android:layout_margin="16dp">
+        android:layout_marginTop="8dp"
+        android:layout_weight="1"
+        android:hint="@string/dateend"
+        android:focusable="false"
+        app:layout_constraintStart_toStartOf="@+id/textInputLayout3"
+        app:layout_constraintTop_toBottomOf="@+id/textInputLayout3"
+        app:startIconDrawable="@drawable/create_task_ic_date">
 
-        <Button
-            android:id="@+id/edit_btn_complete"
-            android:layout_width="150dp"
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/edit_date_end"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="@drawable/border_edit_btn"
-            android:text="Hoàn thành" />
+            android:inputType="none"
+            android:minWidth="180dp"
+            android:focusable="false"
+            android:paddingStart="40dp" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/textInputLayout4"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_weight="1.1"
+        android:hint="@string/timestart"
+        android:focusable="false"
+        app:layout_constraintEnd_toEndOf="@+id/textInputLayout"
+        app:layout_constraintTop_toTopOf="@+id/textInputLayout3"
+        app:startIconDrawable="@drawable/create_task_ic_time">
 
 
-        <Button
-            android:id="@+id/edit_btn_update"
-            android:layout_width="150dp"
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/edit_time_start"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="40dp"
-            android:layout_marginRight="20dp"
-            android:background="@drawable/border_phanloai_listtask"
-            android:text="@string/edit" />
-    </TableRow>
+            android:inputType="none"
+            android:minWidth="140dp"
+            android:focusable="false"
+            android:paddingStart="40dp" />
+    </com.google.android.material.textfield.TextInputLayout>
 
-</LinearLayout>
+    <com.google.android.material.textfield.TextInputLayout
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_weight="1.1"
+        android:hint="@string/timeend"
+        android:focusable="false"
+        app:layout_constraintEnd_toEndOf="@+id/textInputLayout4"
+        app:layout_constraintTop_toBottomOf="@+id/textInputLayout4"
+        app:startIconDrawable="@drawable/create_task_ic_time">
+
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/edit_time_end"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="none"
+            android:focusable="false"
+            android:minWidth="140dp"
+            android:paddingStart="40dp" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <CheckBox
+        android:id="@+id/edit_check_working"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Đang làm công việc này"
+        android:textColor="#3C3C3C"
+        android:textSize="18sp"
+        app:layout_constraintStart_toStartOf="@+id/textInputLayout5"
+        app:layout_constraintTop_toBottomOf="@+id/textInputLayout5" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

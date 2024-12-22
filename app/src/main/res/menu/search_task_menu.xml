@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/action_search_task"
+        android:icon="@drawable/baseline_search_24"
+        android:title="Tìm kiếm theo tên công việc"
+        android:theme="@style/Widget.AppCompat.SearchView"
+        app:actionViewClass="androidx.appcompat.widget.SearchView"
+        app:showAsAction="always|collapseActionView"
+        app:searchIcon="@drawable/baseline_done_24"
+        app:closeIcon="@drawable/baseline_done_24"
+        />
+</menu>

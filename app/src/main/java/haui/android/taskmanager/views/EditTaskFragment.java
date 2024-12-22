@@ -5,19 +5,28 @@ import static android.content.ContentValues.TAG;
 import android.app.DatePickerDialog;
 import android.app.NotificationManager;
 import android.app.TimePickerDialog;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.CheckBox;
-import android.widget.CompoundButton;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.content.ContextCompat;
+import androidx.core.view.MenuProvider;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
+import androidx.lifecycle.Lifecycle;
 
 import com.google.android.material.textfield.TextInputEditText;
 
@@ -41,20 +50,24 @@ import haui.android.taskmanager.notification.NotificationScheduler;
  * create an instance of this fragment.
  */
 public class EditTaskFragment extends Fragment {
-
+    // viết gì đó để đẩy lên trên đầu trong file explorer
     private static final String ARG_DATA = "data";
 
     List<String> nhans;
     Spinner spinner;
     TextInputEditText datestart, timestart, dateend, timeend, decriptionTask, titleTask;
     ArrayAdapter<String> adapterNhans;
-    Button btnUpdate, btnComplete;
     CheckBox checkBoxWorking;
+
+    Toolbar mToolbar;
+
+
     Task currentTask;
     DBHelper dbHelper;
     NotificationScheduler notificationScheduler;
 
     // TODO: Rename and change types and number of parameters
+    // Thằng này để truyền vào id của task, hiển thị thông tin task lên widget
     public static EditTaskFragment newInstance(String param1) {
         EditTaskFragment fragment = new EditTaskFragment();
         Bundle args = new Bundle();
@@ -66,10 +79,9 @@ public class EditTaskFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
     }
 
-    private void initView(View view){
+    private void initView(View view) {
         dbHelper = new DBHelper(getContext());
         notificationScheduler = new NotificationScheduler(requireContext());
 
@@ -77,26 +89,110 @@ public class EditTaskFragment extends Fragment {
         datestart = view.findViewById(R.id.edit_date_start);
         timestart = view.findViewById(R.id.edit_time_start);
         dateend = view.findViewById(R.id.edit_date_end);
-        timeend = view.findViewById(R.id.edit_btn_time_end);
+        timeend = view.findViewById(R.id.edit_time_end);
         titleTask = view.findViewById(R.id.edit_title_task);
         decriptionTask = view.findViewById(R.id.edit_decription_task);
-        btnUpdate = view.findViewById(R.id.edit_btn_update);
-        btnComplete = view.findViewById(R.id.edit_btn_complete);
         checkBoxWorking = view.findViewById(R.id.edit_check_working);
-        nhans = new ArrayList<String>();
+
+        setUpMenu(view);
+
+        nhans = new ArrayList<>();
 
         List<Tag> listTag = dbHelper.getAllTags();
-        for(int i=0; i<listTag.size(); i++){
+        for (int i = 0; i < listTag.size(); i++) {
             nhans.add(listTag.get(i).getTagName());
         }
 
-        adapterNhans = new ArrayAdapter<>(getActivity(), R.layout.item_list_nhan, nhans);
+        adapterNhans = new ArrayAdapter<>(requireActivity(), R.layout.item_list_nhan, nhans);
         spinner.setAdapter(adapterNhans);
     }
 
-    private boolean checkValue(){
-        if(datestart.getText().toString().equals("") || timestart.getText().toString().equals("") || dateend.getText().toString().equals("")
-                || timeend.getText().toString().equals("") || decriptionTask.getText().toString().equals(""))
+    private void setUpMenu(View view) {
+        // Tìm Toolbar từ layout
+        mToolbar = view.findViewById(R.id.m_toolbar);
+
+        // Cài đặt Toolbar vào Fragment
+        ((AppCompatActivity) requireActivity()).setSupportActionBar(mToolbar);
+
+        // Tùy chỉnh Toolbar
+        mToolbar.setTitle("Sửa công việc");
+        mToolbar.setNavigationIcon(R.drawable.baseline_close_32);
+
+        mToolbar.setNavigationOnClickListener(v -> {
+//                backToTaskListFragment(new ListTaskFragment());
+            // Vì ở ListFragment đã thên vào backstack rồi nên chỉ cần quay lại là được
+            requireActivity().getSupportFragmentManager().popBackStack();
+        });
+        Drawable overflowIcon = mToolbar.getOverflowIcon();
+        if (overflowIcon != null) {
+            overflowIcon.setColorFilter(
+                    ContextCompat.getColor(requireContext(), R.color.white),
+                    android.graphics.PorterDuff.Mode.SRC_IN
+            );
+        }
+
+        // Menu cũ bị deprecated, dùng cái này để quaản lý menu
+        // Đăng ký MenuProvider
+        requireActivity().addMenuProvider(new MenuProvider() {
+            @Override
+            public void onCreateMenu(@NonNull Menu menu, @NonNull MenuInflater menuInflater) {
+                // Tạo menu
+                menuInflater.inflate(R.menu.task_menu, menu);
+                MenuItem itemDone = menu.findItem(R.id.action_finish_task);
+                if (currentTask.getStatusID() == 3 || currentTask.getStatusID() == 4) {
+                    itemDone.setVisible(false);
+                    checkBoxWorking.setVisibility(View.GONE);
+                }
+            }
+
+            @Override
+            public void onPrepareMenu(@NonNull Menu menu) {
+                MenuProvider.super.onPrepareMenu(menu);
+                if (overflowIcon != null) {
+                    overflowIcon.setColorFilter(
+                            ContextCompat.getColor(requireContext(), R.color.white),
+                            android.graphics.PorterDuff.Mode.SRC_IN
+                    );
+                }
+            }
+
+            @Override
+            public boolean onMenuItemSelected(@NonNull MenuItem item) {
+                if (item.getItemId() == R.id.action_finish_task) {
+                    completeTask(currentTask);
+                    item.setEnabled(false);
+//                    Toast.makeText(getActivity(), "Finish task", Toast.LENGTH_SHORT).show();
+                    return true;
+                } else if (item.getItemId() == R.id.action_edit_task) {
+                    updateTask();
+//                    Toast.makeText(getActivity(), "Edit task", Toast.LENGTH_SHORT).show();
+                    return true;
+                } else if (item.getItemId() == R.id.action_delete_task) {
+                    dbHelper.deleteTask(currentTask.getTaskID());
+                    requireActivity().getSupportFragmentManager().popBackStack();
+                    Toast.makeText(getActivity(), "Xóa thành công", Toast.LENGTH_SHORT).show();
+                    return true;
+                } else if (item.getItemId() == R.id.action_debug_menu) {
+                    Toast.makeText(getActivity(), "Debug menu", Toast.LENGTH_SHORT).show();
+                    return true;
+                }
+                return false;
+            }
+        }, getViewLifecycleOwner(), Lifecycle.State.RESUMED);
+
+    }
+
+    private void backToTaskListFragment(Fragment fragment) {
+        FragmentTransaction transaction = requireActivity().getSupportFragmentManager().beginTransaction();
+        transaction.replace(R.id.fragment_container, fragment); // `fragment_container` là container layout
+        transaction.addToBackStack(null); // Thêm vào Back Stack
+        transaction.commit();
+    }
+
+
+    private boolean checkValue() {
+        if (datestart.getText().toString().isEmpty() || timestart.getText().toString().isEmpty() || dateend.getText().toString().isEmpty()
+                || timeend.getText().toString().isEmpty() || decriptionTask.getText().toString().isEmpty())
             return true;
         return false;
     }
@@ -109,22 +205,15 @@ public class EditTaskFragment extends Fragment {
 
         try {
             if (getArguments() != null) {
-                Integer position = Integer.valueOf(getArguments().getString(ARG_DATA));
+                int position = Integer.parseInt(getArguments().getString(ARG_DATA));
 
                 currentTask = dbHelper.getTaskById(position);
-
 
                 Tag tag = dbHelper.getTagById(currentTask.getTagID());
 
                 int indexNhans = findPosition(nhans, tag.getTagName());
 
-
-                if(currentTask.getStatusID() == 3 || currentTask.getStatusID() == 4){
-                    btnComplete.setVisibility(View.GONE);
-                    checkBoxWorking.setVisibility(View.GONE);
-                }
-
-                if(currentTask.getStatusID() == 2 ){
+                if (currentTask.getStatusID() == 2) {
                     checkBoxWorking.setVisibility(View.GONE);
                 }
 
@@ -148,22 +237,17 @@ public class EditTaskFragment extends Fragment {
             disableKeyboardForEditText(dateend);
             disableKeyboardForEditText(timeend);
 
-            btnUpdate.setOnClickListener(v -> updateTask());
-            btnComplete.setOnClickListener(v -> completeTask(currentTask));
-            checkBoxWorking.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                @Override
-                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                    if(isChecked){
-                        dbHelper.updateStatusTask(currentTask.getTaskID(), 2);
-                        Toast.makeText(getActivity(), "Cập nhật trạng thái thành công.", Toast.LENGTH_SHORT).show();
-                        checkBoxWorking.setEnabled(false);
-                    }
-
+            checkBoxWorking.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                if (isChecked) {
+                    dbHelper.updateStatusTask(currentTask.getTaskID(), 2);
+                    Toast.makeText(getActivity(), "Cập nhật trạng thái thành công.", Toast.LENGTH_SHORT).show();
+                    checkBoxWorking.setEnabled(false);
                 }
+
             });
 
-        }catch (Exception ex){
-            Log.e("Error Edit Task:", "onCreateView: ", ex );
+        } catch (Exception ex) {
+            Log.e("Error Edit Task:", "onCreateView: ", ex);
         }
 
         return view;
@@ -174,22 +258,21 @@ public class EditTaskFragment extends Fragment {
         editText.setShowSoftInputOnFocus(false);
     }
 
-    public void completeTask(Task task){
-        if(task.getStatusID() == 3) {
+    public void completeTask(Task task) {
+        if (task.getStatusID() == 3) {
             Toast.makeText(getActivity(), "Công việc đã hoàn thành.", Toast.LENGTH_SHORT).show();
-        }else{
-
+        } else {
             String stringDate = task.getEndDate() + " " + task.getEndTime();
 
-            SimpleDateFormat dateTimeFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+            SimpleDateFormat dateTimeFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault());
 
             try {
                 Date dateEnd = dateTimeFormat.parse(stringDate);
                 Date dateNow = new Date();
 
-                if(dateEnd.before(dateNow)){
+                if (dateEnd.before(dateNow)) {
                     dbHelper.updateStatusTask(task.getTaskID(), 4);
-                }else{
+                } else {
                     dbHelper.updateStatusTask(task.getTaskID(), 3);
                 }
 
@@ -198,16 +281,16 @@ public class EditTaskFragment extends Fragment {
             } catch (ParseException e) {
                 throw new RuntimeException(e);
             }
-            btnComplete.setVisibility(View.GONE);
             Toast.makeText(getActivity(), "Cập nhật trạng thái thành công.", Toast.LENGTH_SHORT).show();
+            requireActivity().getSupportFragmentManager().popBackStack();
+
         }
     }
 
 
-    private void updateTask(){
-        if(checkValue())
+    private void updateTask() {
+        if (checkValue())
             Toast.makeText(getActivity(), "Vui lòng nhập đủ nôi dung !!!", Toast.LENGTH_SHORT).show();
-
         else {
             // Xóa thông báo cũ trước khi cập nhật tác vụ
             removeOldNotifications(currentTask.getTaskID());
@@ -220,6 +303,7 @@ public class EditTaskFragment extends Fragment {
             scheduleTaskNotifications();
 
             Toast.makeText(getActivity(), "Sửa thành công.", Toast.LENGTH_SHORT).show();
+            requireActivity().getSupportFragmentManager().popBackStack();
         }
     }
 
@@ -268,7 +352,7 @@ public class EditTaskFragment extends Fragment {
                     endTimeMillis);
 
         } catch (ParseException e) {
-            e.printStackTrace();
+//            e.printStackTrace();
             Log.d(TAG, "Định dạng ngày giờ không hợp lệ!");
         }
     }
@@ -290,7 +374,7 @@ public class EditTaskFragment extends Fragment {
 
         DatePickerDialog datePickerDialog = new DatePickerDialog(getContext(), (view, year1, monthOfYear, dayOfMonth) -> {
             calendar.set(year1, monthOfYear, dayOfMonth);
-            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd/MM/yyyy");
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
             date.setText(simpleDateFormat.format(calendar.getTime()));
         }, year, month, day);
         datePickerDialog.show();
@@ -302,7 +386,7 @@ public class EditTaskFragment extends Fragment {
         int minute = calendar.get(Calendar.MINUTE);
 
         TimePickerDialog timePickerDialog = new TimePickerDialog(getContext(), (view, hourOfDay, minute1) -> {
-            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HH:mm");
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
             calendar.set(0, 0, 0, hourOfDay, minute1);
             time.setText(simpleDateFormat.format(calendar.getTime()));
         }, hour, minute, true);
