@@ -264,7 +264,7 @@ public class MainActivity extends AppCompatActivity {
 //        bottomSheetDialog.show();
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
+//    @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
     private void requestPermissions() {
         String[] permissions = {
                 Manifest.permission.READ_EXTERNAL_STORAGE,
@@ -541,32 +541,4 @@ public class MainActivity extends AppCompatActivity {
                 endTimeMillis);
     }
 
-
-    public void openTemplateForEditing() {
-        String templateFileName = "task_template.xls";
-        File externalFile = new File(getExternalFilesDir(null), templateFileName);
-        if (!externalFile.exists()) {
-            try {
-                InputStream is = getAssets().open(templateFileName);
-                FileOutputStream os = new FileOutputStream(externalFile);
-                byte[] buffer = new byte[1024];
-                int length;
-                while ((length = is.read(buffer)) > 0) {
-                    os.write(buffer, 0, length);
-                }
-                is.close();
-                os.close();
-            } catch (Exception e) {
-//                logger.error("Error copying template file.", e);
-                Toast.makeText(this, "Error copying template file.", Toast.LENGTH_LONG).show();
-                return;
-            }
-        }
-
-        Uri uri = FileProvider.getUriForFile(this, "haui.android.taskmanager.fileprovider", externalFile);
-        Intent intent = new Intent(Intent.ACTION_VIEW);
-        intent.setDataAndType(uri, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-        startActivity(intent);
-    }
 }
