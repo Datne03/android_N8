@@ -21,27 +21,18 @@ import haui.android.taskmanager.models.TaskDetail;
 public class DBHelper extends SQLiteOpenHelper {
     // DATABASE
     private static final String DATABASE_NAME = "TaskManager.db";
-    private static final int DATABASE_VERSION = 9;
-
-    // table USER
-    private static final String TABLE_USER_NAME = "USER";
-    private static final String COLUMN_USER_ID = "UserID";
-    private static final String COLUMN_USER_NAME = "UserName";
-    private static final String COLUMN_USER_EMAIL = "UserEmail";
-    private static final String COLUMN_USER_PASSWORD = "UserPassword";
+    private static final int DATABASE_VERSION = 10;
 
     // table STATUS
     private static final String TABLE_STATUS_NAME = "STATUS";
     private static final String COLUMN_STATUS_ID = "StatusID";
     private static final String COLUMN_STATUS_NAME = "StatusName";
 
-
     // table CATEGORY
     private static final String TABLE_TAG_NAME = "TAG";
     private static final String COLUMN_TAG_ID = "TagID";
     private static final String COLUMN_TAG_NAME = "TagName";
     private static final String COLUMN_TAG_COLOR = "TagColor";
-
 
     // table TASK
     private static final String TABLE_TASK_NAME = "TASK";
@@ -57,7 +48,6 @@ public class DBHelper extends SQLiteOpenHelper {
     private static final String COLUMN_TASK_STATUS_ID = "StatusID";
     private static final String COLUMN_TASK_TAG_ID = "TagID";
 
-
     // table NOTIFICATION
     private static final String TABLE_NOTIFICATION_NAME = "NOTIFICATION";
     private static final String COLUMN_NOTIFICATION_ID = "NotificationID";
@@ -66,9 +56,34 @@ public class DBHelper extends SQLiteOpenHelper {
     private static final String COLUMN_NOTIFICATION_CONTENT = "NotificationContent";
     private static final String COLUMN_NOTIFICATION_TIME = "NotificationTime";
 
+    private SQLiteDatabase database;
 
     public DBHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
+    }
+
+    // Lấy database ở chế độ ghi
+    public synchronized SQLiteDatabase getWritableDatabaseInstance() {
+        if (database == null || !database.isOpen()) {
+            database = super.getWritableDatabase();
+        }
+        return database;
+    }
+
+    // Lấy database ở chế độ đọc
+    public synchronized SQLiteDatabase getReadableDatabaseInstance() {
+        if (database == null || !database.isOpen()) {
+            database = super.getReadableDatabase();
+        }
+        return database;
+    }
+
+    // Đóng cơ sở dữ liệu
+    public synchronized void closeDatabase() {
+        if (database != null && database.isOpen()) {
+            database.close();
+            database = null;
+        }
     }
 
     private boolean isTableExists(SQLiteDatabase db, String tableName) {
@@ -80,19 +95,6 @@ public class DBHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-
-        if (!isTableExists(db, TABLE_USER_NAME)) {
-            String createCategoryTableStatement = String.format(
-                    "CREATE TABLE %s (" +
-                            "%s INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                            "%s TEXT, " +
-                            "%s TEXT, " +
-                            "%s TEXT)",
-                    TABLE_USER_NAME, COLUMN_USER_ID, COLUMN_USER_NAME, COLUMN_USER_EMAIL, COLUMN_USER_PASSWORD
-            );
-            db.execSQL(createCategoryTableStatement);
-        }
-
         if (!isTableExists(db, TABLE_STATUS_NAME)) {
             String createCategoryTableStatement = String.format(
                     "CREATE TABLE %s (" +
@@ -117,18 +119,18 @@ public class DBHelper extends SQLiteOpenHelper {
         if (!isTableExists(db, TABLE_TASK_NAME)) {
             String createTaskTableStatement = String.format(
                     "CREATE TABLE %s (" +
-                        "%s INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                        "%s TEXT, " +
-                        "%s TEXT, " +
-                        "%s TEXT, " +
-                        "%s TEXT, " +
-                        "%s TEXT, " +
-                        "%s TEXT, " +
-                        "%s INTEGER, " +
-                        "%s INTEGER, " +
-                        "%s INTEGER, " +
-                        "FOREIGN KEY (%s) REFERENCES %s (%s), " +
-                        "FOREIGN KEY (%s) REFERENCES %s (%s))",
+                            "%s INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                            "%s TEXT, " +
+                            "%s TEXT, " +
+                            "%s TEXT, " +
+                            "%s TEXT, " +
+                            "%s TEXT, " +
+                            "%s TEXT, " +
+                            "%s INTEGER, " +
+                            "%s INTEGER, " +
+                            "%s INTEGER, " +
+                            "FOREIGN KEY (%s) REFERENCES %s (%s), " +
+                            "FOREIGN KEY (%s) REFERENCES %s (%s))",
                     TABLE_TASK_NAME, COLUMN_TASK_ID, COLUMN_TASK_NAME, COLUMN_TASK_DESCRIPTION,
                     COLUMN_TASK_START_DATE, COLUMN_TASK_START_TIME, COLUMN_TASK_END_DATE, COLUMN_TASK_END_TIME,
                     COLUMN_TASK_PRIORITY, COLUMN_TASK_STATUS_ID, COLUMN_TASK_TAG_ID,
@@ -160,8 +162,6 @@ public class DBHelper extends SQLiteOpenHelper {
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         // Xử lý nâng cấp cơ sở dữ liệu khi có thay đổi version
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_USER_NAME);
-        onCreate(db);
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_TASK_NAME);
         onCreate(db);
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_STATUS_NAME);
@@ -171,6 +171,7 @@ public class DBHelper extends SQLiteOpenHelper {
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_NOTIFICATION_NAME);
         onCreate(db);
     }
+
 
     private void initialData(SQLiteDatabase db) {
         insertStatus(db, "Cần làm");
@@ -193,60 +194,35 @@ public class DBHelper extends SQLiteOpenHelper {
         insertTag(db, "Linh tinh", "#800080");
 
         // Insert tasks
-        addTask(db, "Hoàn thành báo cáo", "Hoàn thành báo cáo tài chính hàng tháng.", "01/06/2024", "09:00", "02/06/2024", "17:00", 1, 1, 1);
-        addTask(db, "Họp nhóm", "Tham dự cuộc họp nhóm hàng tuần.", "03/06/2024", "10:00", "05/06/2024", "11:00", 2, 2, 2);
-        addTask(db, "Deadline dự án", "Gửi sản phẩm cuối cùng của dự án.", "01/06/2024", "14:00", "06/06/2024", "16:00", 3, 3, 3);
-        addTask(db, "Gọi cho khách hàng", "Gọi với khách hàng để thảo luận về các yêu cầu của dự án.", "05/06/2024", "13:00", "10/06/2024", "14:00", 1, 4, 4);
-        addTask(db, "Đánh giá code", "Xem lại mã được gửi bởi các thành viên trong nhóm.", "09/06/2024", "15:00", "11/06/2024", "17:00", 2, 1, 5);
-        addTask(db, "Cập nhật trang web", "Cập nhật tin tức mới nhất vào trang web công ty.", "11/06/2024", "16:00", "11/06/2024", "18:00", 3, 2, 1);
-        addTask(db, "Sửa lỗi", "Sửa lỗi do nhóm QA báo cáo..", "12/06/2024", "09:00", "14/06/2024", "12:00", 1, 3, 2);
-        addTask(db, "Tính năng mới", "Phát triển tính năng mới cho ứng dụng di động.", "14/06/2024", "10:00", "15/06/2024", "17:00", 2, 4, 3);
-        addTask(db, "Viết tài liệu", "Viết tài liệu cho API mới.", "14/06/2024", "11:00", "16/06/2024", "13:00", 3, 1, 4);
-        addTask(db, "Lên kế hoạch chạy nước rút", "Lập kế hoạch nhiệm vụ cho lần chạy nước rút tiếp theo.", "19/06/2024", "09:00", "20/06/2024", "11:00", 1, 2, 5);
+        addTask(db, "Hoàn thành báo cáo", "Hoàn thành báo cáo tài chính hàng tháng.", "12/12/2024", "09:00", "12/12/2024", "17:00", 1, 1, 1);
+        addTask(db, "Họp nhóm", "Tham dự cuộc họp nhóm hàng tuần.", "12/12/2024", "10:00", "12/12/2024", "11:00", 2, 2, 2);
+        addTask(db, "Deadline dự án", "Gửi sản phẩm cuối cùng của dự án.", "12/12/2024", "14:00", "13/12/2024", "16:00", 3, 3, 3);
+        addTask(db, "Gọi cho khách hàng", "Gọi với khách hàng để thảo luận về các yêu cầu của dự án.", "15/12/2024", "13:00", "15/12/2024", "14:00", 1, 4, 4);
+        addTask(db, "Đánh giá code", "Xem lại mã được gửi bởi các thành viên trong nhóm.", "19/12/2024", "15:00", "19/12/2024", "17:00", 2, 1, 5);
+        addTask(db, "Cập nhật trang web", "Cập nhật tin tức mới nhất vào trang web công ty.", "20/12/2024", "16:00", "20/12/2024", "18:00", 3, 2, 1);
+        addTask(db, "Sửa lỗi", "Sửa lỗi do nhóm QA báo cáo..", "19/12/2024", "09:00", "19/12/2024", "12:00", 1, 3, 2);
+        addTask(db, "Tính năng mới", "Phát triển tính năng mới cho ứng dụng di động.", "21/12/2024", "10:00", "21/12/2024", "17:00", 2, 4, 3);
+        addTask(db, "Viết tài liệu", "Viết tài liệu cho API mới.", "18/12/2024", "11:00", "19/12/2024", "13:00", 3, 1, 4);
+        addTask(db, "Lên kế hoạch chạy nước rút", "Lập kế hoạch nhiệm vụ cho lần chạy nước rút tiếp theo.", "19/12/2024", "09:00", "20/12/2024", "11:00", 1, 2, 5);
 
         // Insert notification
-        insertNotification(db, 3, "Bắt đầu: Deadline dự án", "Gửi sản phẩm cuối cùng của dự án.", "01/06/2024 14:00");
-        insertNotification(db, 2,"Bắt đầu: Họp nhóm", "Tham dự cuộc họp nhóm hàng tuần.", "03/06/2024 10:00");
+        insertNotification(db, 3, "Bắt đầu: Deadline dự án", "Gửi sản phẩm cuối cùng của dự án.", "13/12/2024 14:00");
+        insertNotification(db, 2,"Bắt đầu: Họp nhóm", "Tham dự cuộc họp nhóm hàng tuần.", "13/12/2024 10:00");
 
-        insertNotification(db, 4, "Bắt đầu: Gọi cho khách hàng", "Gọi với khách hàng để thảo luận về các yêu cầu của dự án.", "05/06/2024 13:00");
-        insertNotification(db, 4,"[Nhắc lại] Bắt đầu: Gọi cho khách hàng", "Gọi với khách hàng để thảo luận về các yêu cầu của dự án.", "05/06/2024 13:05");
+        insertNotification(db, 4, "Bắt đầu: Gọi cho khách hàng", "Gọi với khách hàng để thảo luận về các yêu cầu của dự án.", "20/12/2024 13:00");
+        insertNotification(db, 4,"[Nhắc lại] Bắt đầu: Gọi cho khách hàng", "Gọi với khách hàng để thảo luận về các yêu cầu của dự án.", "20/12/2024 13:05");
 
-        insertNotification(db, 4,"Đến hạn: Gọi cho khách hàng", "Gọi với khách hàng để thảo luận về các yêu cầu của dự án.", "10/06/2024 14:00");
-        insertNotification(db, 4, "[Nhắc lại] Đến hạn: Gọi cho khách hàng", "Gọi với khách hàng để thảo luận về các yêu cầu của dự án.", "10/06/2024 14:05");
+        insertNotification(db, 4,"Đến hạn: Gọi cho khách hàng", "Gọi với khách hàng để thảo luận về các yêu cầu của dự án.", "10/12/2024 14:00");
+        insertNotification(db, 4, "[Nhắc lại] Đến hạn: Gọi cho khách hàng", "Gọi với khách hàng để thảo luận về các yêu cầu của dự án.", "10/12/2024 14:05");
 
-        insertNotification(db, 6,"Bắt đầu: Cập nhật trang web", "Cập nhật tin tức mới nhất vào trang web công ty.", "11/06/2024 16:00");
-        insertNotification(db, 6,"[Nhắc lại] Bắt đầu: Cập nhật trang web", "Cập nhật tin tức mới nhất vào trang web công ty.", "11/06/2024 16:05");
+        insertNotification(db, 6,"Bắt đầu: Cập nhật trang web", "Cập nhật tin tức mới nhất vào trang web công ty.", "11/12/2024 16:00");
+        insertNotification(db, 6,"[Nhắc lại] Bắt đầu: Cập nhật trang web", "Cập nhật tin tức mới nhất vào trang web công ty.", "11/12/2024 16:05");
 
-        insertNotification(db, 8, "Bắt đầu: Tính năng mới", "Phát triển tính năng mới cho ứng dụng di động.", "14/06/2024 10:00");
-        insertNotification(db, 8, "[Nhắc lại] Bắt đầu: Tính năng mới", "Phát triển tính năng mới cho ứng dụng di động.", "14/06/2024 10:05");
+        insertNotification(db, 8, "Bắt đầu: Tính năng mới", "Phát triển tính năng mới cho ứng dụng di động.", "14/12/2024 10:00");
+        insertNotification(db, 8, "[Nhắc lại] Bắt đầu: Tính năng mới", "Phát triển tính năng mới cho ứng dụng di động.", "14/12/2024 10:05");
 
-        insertNotification(db, 8, "Đến hạn: Tính năng mới", "Phát triển tính năng mới cho ứng dụng di động.", "15/06/2024 17:00");
-        insertNotification(db, 8, "[Nhắc lại] Đến hạn: Tính năng mới", "Phát triển tính năng mới cho ứng dụng di động.", "15/06/2024 17:05");
-
-        // user
-        registerUser("admin","admin@gmail.com","123456");
-    }
-
-    public boolean registerUser(String username, String email, String password) {
-        SQLiteDatabase db = this.getReadableDatabase();
-        ContentValues values = new ContentValues();
-        values.put(COLUMN_USER_NAME, username);
-        values.put(COLUMN_USER_EMAIL, email);
-        values.put(COLUMN_USER_PASSWORD, password);
-
-        long result = db.insert(TABLE_USER_NAME, null, values);
-        return result != -1; // Thành công nếu trả về ID khác -1
-    }
-
-    // Kiểm tra thông tin đăng nhập
-    public boolean loginUser(String username, String password) {
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT * FROM TABLE_USER_NAME WHERE COLUMN_USER_NAME = ? AND COLUMN_USER_PASSWORD = ?",
-                new String[]{username, password});
-
-        boolean isValid = cursor.getCount() > 0;
-        cursor.close();
-        return isValid;
+        insertNotification(db, 8, "Đến hạn: Tính năng mới", "Phát triển tính năng mới cho ứng dụng di động.", "15/12/2024 17:00");
+        insertNotification(db, 8, "[Nhắc lại] Đến hạn: Tính năng mới", "Phát triển tính năng mới cho ứng dụng di động.", "15/12/2024 17:05");
     }
 
     private void addTask(SQLiteDatabase db, String taskName, String description, String startDate, String startTime, String endDate, String endTime, int priority, int statusID, int tagID) {
@@ -286,14 +262,14 @@ public class DBHelper extends SQLiteOpenHelper {
     }
 
     public long addStatus(String statusName) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        long newRowId = insertStatus(db, statusName);
-        db.close();
-        return newRowId;
+        SQLiteDatabase db = getWritableDatabaseInstance();
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_STATUS_NAME, statusName);
+        return db.insert(TABLE_STATUS_NAME, null, values);
     }
 
     public Status getStatus(int id) {
-        SQLiteDatabase db = this.getReadableDatabase();
+        SQLiteDatabase db = this.getReadableDatabaseInstance();
         Cursor cursor = db.query(TABLE_STATUS_NAME, new String[]{COLUMN_STATUS_ID, COLUMN_STATUS_NAME}, COLUMN_STATUS_ID + "=?", new String[]{String.valueOf(id)}, null, null, null, null);
         if (cursor != null) {
             cursor.moveToFirst();
@@ -308,7 +284,7 @@ public class DBHelper extends SQLiteOpenHelper {
     }
 
     public Status getStatusByName(String statusName) {
-        SQLiteDatabase db = this.getReadableDatabase();
+        SQLiteDatabase db = this.getReadableDatabaseInstance();
         Cursor cursor = db.query(TABLE_STATUS_NAME,
                 new String[]{COLUMN_STATUS_ID, COLUMN_STATUS_NAME},
                 COLUMN_STATUS_NAME + " = ? COLLATE NOCASE",
@@ -329,7 +305,7 @@ public class DBHelper extends SQLiteOpenHelper {
     public List<Status> getAllStatus() {
         List<Status> statuses = new ArrayList<>();
         String selectQuery = "SELECT * FROM " + TABLE_STATUS_NAME;
-        SQLiteDatabase db = this.getReadableDatabase();
+        SQLiteDatabase db = this.getReadableDatabaseInstance();
         Cursor cursor = db.rawQuery(selectQuery, null);
 
         if (cursor.moveToFirst()) {
@@ -345,73 +321,65 @@ public class DBHelper extends SQLiteOpenHelper {
     }
 
     public int updateStatus(Status status) {
-        SQLiteDatabase db = this.getWritableDatabase();
+        SQLiteDatabase db = getWritableDatabaseInstance();
         ContentValues values = new ContentValues();
         values.put(COLUMN_STATUS_NAME, status.getStatusName());
-
         return db.update(TABLE_STATUS_NAME, values, COLUMN_STATUS_ID + " = ?", new String[]{String.valueOf(status.getStatusID())});
     }
 
     public void deleteStatus(int statusID) {
-        SQLiteDatabase db = this.getWritableDatabase();
+        SQLiteDatabase db = getWritableDatabaseInstance();
         db.delete(TABLE_STATUS_NAME, COLUMN_STATUS_ID + " = ?", new String[]{String.valueOf(statusID)});
-        db.close();
     }
 
     public void deleteAllStatusData() {
-        SQLiteDatabase db = this.getWritableDatabase();
+        SQLiteDatabase db = getWritableDatabaseInstance();
         db.delete(TABLE_STATUS_NAME, null, null);
-        db.close();
     }
 
     // CRUD for TAG table
     public long addTag(Tag tag) {
-        SQLiteDatabase db = this.getWritableDatabase();
+        SQLiteDatabase db = getWritableDatabaseInstance();
         ContentValues values = new ContentValues();
         values.put(COLUMN_TAG_NAME, tag.getTagName());
         values.put(COLUMN_TAG_COLOR, tag.getTagColor());
-
-        long newRowId = db.insert(TABLE_TAG_NAME, null, values);
-        db.close();
-        return newRowId;
+        return db.insert(TABLE_TAG_NAME, null, values);
     }
 
-    public Tag getTagById(int tagID){
-        SQLiteDatabase db = this.getReadableDatabase();
-        Tag tag = null;
+    public Tag getTagById(int tagID) {
+        SQLiteDatabase db = getReadableDatabaseInstance();
         Cursor cursor = db.query(TABLE_TAG_NAME, new String[]{
                         COLUMN_TAG_ID, COLUMN_TAG_NAME, COLUMN_TAG_COLOR},
                 COLUMN_TAG_ID + "=?", new String[]{String.valueOf(tagID)},
                 null, null, null);
 
+        Tag tag = null;
         if (cursor.moveToFirst()) {
             tag = createTagFromCursor(cursor);
         }
         cursor.close();
-        db.close();
         return tag;
     }
 
 
-    public Tag getTagByTagName(String tagName){
-        SQLiteDatabase db = this.getReadableDatabase();
-        Tag tag = null;
+    public Tag getTagByTagName(String tagName) {
+        SQLiteDatabase db = getReadableDatabaseInstance();
         Cursor cursor = db.query(TABLE_TAG_NAME,
                 new String[]{COLUMN_TAG_ID, COLUMN_TAG_NAME, COLUMN_TAG_COLOR},
                 COLUMN_TAG_NAME + " = ? COLLATE NOCASE",
                 new String[]{tagName},
                 null, null, null);
 
+        Tag tag = null;
         if (cursor.moveToFirst()) {
             tag = createTagFromCursor(cursor);
         }
         cursor.close();
-        db.close();
         return tag;
     }
 
     public Tag getTag(int id) {
-        SQLiteDatabase db = this.getReadableDatabase();
+        SQLiteDatabase db = this.getReadableDatabaseInstance();
         Cursor cursor = db.query(TABLE_TAG_NAME, new String[]{COLUMN_TAG_ID, COLUMN_TAG_NAME, COLUMN_TAG_COLOR}, COLUMN_TAG_ID + "=?", new String[]{String.valueOf(id)}, null, null, null, null);
         if (cursor != null) {
             cursor.moveToFirst();
@@ -428,7 +396,7 @@ public class DBHelper extends SQLiteOpenHelper {
     public List<Tag> getAllTags() {
         List<Tag> tags = new ArrayList<>();
         String selectQuery = "SELECT * FROM " + TABLE_TAG_NAME;
-        SQLiteDatabase db = this.getReadableDatabase();
+        SQLiteDatabase db = getReadableDatabaseInstance();
         Cursor cursor = db.rawQuery(selectQuery, null);
 
         if (cursor.moveToFirst()) {
@@ -437,14 +405,12 @@ public class DBHelper extends SQLiteOpenHelper {
                 tags.add(tag);
             } while (cursor.moveToNext());
         }
-
         cursor.close();
-        db.close();
         return tags;
     }
 
     public int updateTag(Tag tag) {
-        SQLiteDatabase db = this.getWritableDatabase();
+        SQLiteDatabase db = getWritableDatabaseInstance(); // Sử dụng phương thức đã chỉnh sửa
         ContentValues values = new ContentValues();
         values.put(COLUMN_TAG_NAME, tag.getTagName());
         values.put(COLUMN_TAG_COLOR, tag.getTagColor());
@@ -453,16 +419,16 @@ public class DBHelper extends SQLiteOpenHelper {
     }
 
     public int deleteTag(int tagID) {
-        SQLiteDatabase db = this.getWritableDatabase();
+        SQLiteDatabase db = getWritableDatabaseInstance(); // Sử dụng phương thức đã chỉnh sửa
         // Xóa tất cả các tác vụ liên quan đến tag
         db.delete(TABLE_TASK_NAME, COLUMN_TASK_TAG_ID + " = ?", new String[]{String.valueOf(tagID)});
-        // Sau đó  mới xóa tag
+        // Sau đó mới xóa tag
         return db.delete(TABLE_TAG_NAME, COLUMN_TAG_ID + " = ?", new String[]{String.valueOf(tagID)});
     }
 
     public List<Task> getAllTasks() {
         List<Task> tasks = new ArrayList<>();
-        SQLiteDatabase db = this.getReadableDatabase();
+        SQLiteDatabase db = getReadableDatabaseInstance(); // Sử dụng phương thức đã chỉnh sửa
         Cursor cursor = db.query(TABLE_TASK_NAME, new String[]{
                         COLUMN_TASK_ID, COLUMN_TASK_NAME, COLUMN_TASK_DESCRIPTION,
                         COLUMN_TASK_START_DATE, COLUMN_TASK_START_TIME,
@@ -477,8 +443,7 @@ public class DBHelper extends SQLiteOpenHelper {
             } while (cursor.moveToNext());
         }
         cursor.close();
-        db.close();
-        return tasks;
+        return tasks; // Không cần đóng db vì cơ chế dùng chung đã đảm bảo
     }
 
     public List<TaskDetail> getAllTasksDetail() {
@@ -486,27 +451,21 @@ public class DBHelper extends SQLiteOpenHelper {
         String selectQuery = "SELECT t.*, s.*, g.* " + " FROM "
                 + TABLE_TASK_NAME + " t LEFT JOIN " + TABLE_STATUS_NAME + " s ON t." + COLUMN_TASK_STATUS_ID + " = s." + COLUMN_STATUS_ID
                 + " LEFT JOIN " + TABLE_TAG_NAME + " g ON t." + COLUMN_TASK_TAG_ID + " = g." + COLUMN_TAG_ID;
-        SQLiteDatabase db = this.getReadableDatabase();
+        SQLiteDatabase db = getReadableDatabaseInstance(); // Sử dụng phương thức đã chỉnh sửa
         Cursor cursor = db.rawQuery(selectQuery, null);
 
         if (cursor.moveToFirst()) {
             do {
-                Task task = new Task();
-                Status status = new Status();
-                Tag tag = new Tag();
-
-                task = createTaskFromCursor(cursor);
-                status = createStatusFromCursor(cursor);
-                tag = createTagFromCursor(cursor);
+                Task task = createTaskFromCursor(cursor);
+                Status status = createStatusFromCursor(cursor);
+                Tag tag = createTagFromCursor(cursor);
 
                 TaskDetail taskDetail = new TaskDetail(task, status, tag);
 
                 listTaskDetail.add(taskDetail);
             } while (cursor.moveToNext());
         }
-
         cursor.close();
-        db.close();
         return listTaskDetail;
     }
 
@@ -518,7 +477,7 @@ public class DBHelper extends SQLiteOpenHelper {
                 + "LEFT JOIN " + TABLE_TAG_NAME + " g ON t." + COLUMN_TASK_TAG_ID + " = g." + COLUMN_TAG_ID + " "
                 + "WHERE t." + COLUMN_TASK_ID + " = ?";
 
-        SQLiteDatabase db = this.getReadableDatabase();
+        SQLiteDatabase db = this.getReadableDatabaseInstance();
         Cursor cursor = db.rawQuery(selectQuery, new String[]{String.valueOf(taskId)});
 
 
@@ -544,7 +503,7 @@ public class DBHelper extends SQLiteOpenHelper {
                 " LEFT JOIN " + TABLE_TAG_NAME + " g ON t." + COLUMN_TASK_TAG_ID + " = g." + COLUMN_TAG_ID +
                 " WHERE t." + COLUMN_TAG_ID + " = ?";
 
-        SQLiteDatabase db = this.getReadableDatabase();
+        SQLiteDatabase db = this.getReadableDatabaseInstance();
         Cursor cursor = db.rawQuery(selectQuery, new String[]{String.valueOf(tagId)}); // Truyền tagId vào
 
         if (cursor.moveToFirst()) {
@@ -577,7 +536,7 @@ public class DBHelper extends SQLiteOpenHelper {
                 + " WHERE date(substr(t." + COLUMN_TASK_START_DATE + ", 7, 4) || '-' || substr(t." + COLUMN_TASK_START_DATE + ", 4, 2) || '-' || substr(t." + COLUMN_TASK_START_DATE + ", 1, 2)) <= date(?)"
                 + " AND date(substr(t." + COLUMN_TASK_END_DATE + ", 7, 4) || '-' || substr(t." + COLUMN_TASK_END_DATE + ", 4, 2) || '-' || substr(t." + COLUMN_TASK_END_DATE + ", 1, 2)) >= date(?)";
 
-        SQLiteDatabase db = this.getReadableDatabase();
+        SQLiteDatabase db = this.getReadableDatabaseInstance();
         Cursor cursor = db.rawQuery(selectQuery, new String[]{date, date});
 
         if (cursor.moveToFirst()) {
@@ -593,7 +552,7 @@ public class DBHelper extends SQLiteOpenHelper {
     }
 
     public Task getTaskById(int taskId) {
-        SQLiteDatabase db = this.getReadableDatabase();
+        SQLiteDatabase db = this.getReadableDatabaseInstance();
         Task task = null;
         Cursor cursor = db.query(TABLE_TASK_NAME, new String[]{
                         COLUMN_TASK_ID, COLUMN_TASK_NAME, COLUMN_TASK_DESCRIPTION,
@@ -614,7 +573,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
     public List<Task> getAllTasksByStatus(int statusId) {
         List<Task> tasks = new ArrayList<>();
-        SQLiteDatabase db = this.getReadableDatabase();
+        SQLiteDatabase db = this.getReadableDatabaseInstance();
         Cursor cursor = db.query(TABLE_TASK_NAME, new String[]{
                         COLUMN_TASK_ID, COLUMN_TASK_NAME, COLUMN_TASK_DESCRIPTION,
                         COLUMN_TASK_START_DATE, COLUMN_TASK_START_TIME,
@@ -666,7 +625,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
     public List<Task> searchTasks(String query) {
         List<Task> tasks = new ArrayList<>();
-        SQLiteDatabase db = this.getReadableDatabase();
+        SQLiteDatabase db = this.getReadableDatabaseInstance();
 
         String selectQuery = "SELECT * FROM " + TABLE_TASK_NAME + " WHERE " + COLUMN_TASK_NAME + " LIKE '%" + query + "%'";
         Cursor cursor = db.rawQuery(selectQuery, null);
@@ -789,7 +748,7 @@ public class DBHelper extends SQLiteOpenHelper {
                            String taskStartDay, String taskStartTime,
                            String taskEndDay, String taskEndTime,
                            int taskPriority, int taskStatusId, int taskTagId) {
-        SQLiteDatabase db = this.getWritableDatabase();
+        SQLiteDatabase db = this.getWritableDatabaseInstance();
 
         ContentValues values = new ContentValues();
         values.put(COLUMN_TASK_NAME, taskName);
@@ -812,7 +771,7 @@ public class DBHelper extends SQLiteOpenHelper {
     public boolean updateTask(int taskId, String taskDescription,
                               String taskStartDay, String taskStartTime,
                               String taskEndDay, String taskEndTime, int taskTagId) {
-        SQLiteDatabase db = this.getWritableDatabase();
+        SQLiteDatabase db = this.getWritableDatabaseInstance();
         ContentValues values = new ContentValues();
         values.put(COLUMN_TASK_DESCRIPTION, taskDescription);
         values.put(COLUMN_TASK_START_DATE, taskStartDay);
@@ -828,7 +787,7 @@ public class DBHelper extends SQLiteOpenHelper {
     }
 
     public boolean updateStatusTask(int taskId, int statusId) {
-        SQLiteDatabase db = this.getWritableDatabase();
+        SQLiteDatabase db = this.getWritableDatabaseInstance();
         ContentValues values = new ContentValues();
         values.put(COLUMN_TASK_STATUS_ID, statusId);
 
@@ -839,25 +798,16 @@ public class DBHelper extends SQLiteOpenHelper {
     }
 
     public boolean deleteTask(int taskId) {
-        SQLiteDatabase db = this.getWritableDatabase();
+        SQLiteDatabase db = this.getWritableDatabaseInstance();
         int rowsAffected = db.delete(TABLE_TASK_NAME,
                 COLUMN_TASK_ID + "=?", new String[]{String.valueOf(taskId)});
         db.close();
         return rowsAffected > 0;
     }
 
-
-
-
-
-
-
-
-
-
     // Add a new notification
     public long addNotification(int taskID, String title, String content, String time) {
-        SQLiteDatabase db = this.getWritableDatabase();
+        SQLiteDatabase db = this.getWritableDatabaseInstance();
         ContentValues values = new ContentValues();
         values.put(COLUMN_NOTIFICATION_TASKID, taskID);
         values.put(COLUMN_NOTIFICATION_TITLE, title);
@@ -871,7 +821,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
     // Get a single notification by ID
     public Notification getNotificationByNotiID(int notiID) {
-        SQLiteDatabase db = this.getReadableDatabase();
+        SQLiteDatabase db = this.getReadableDatabaseInstance();
         Cursor cursor = db.query(TABLE_NOTIFICATION_NAME, new String[]{
                         COLUMN_NOTIFICATION_ID, COLUMN_NOTIFICATION_TASKID, COLUMN_NOTIFICATION_TITLE,
                         COLUMN_NOTIFICATION_CONTENT, COLUMN_NOTIFICATION_TIME},
@@ -895,7 +845,7 @@ public class DBHelper extends SQLiteOpenHelper {
         String selectQuery = "SELECT * FROM " + TABLE_NOTIFICATION_NAME +
                 " ORDER BY " + COLUMN_NOTIFICATION_ID + " DESC;";
 
-        SQLiteDatabase db = this.getReadableDatabase();
+        SQLiteDatabase db = this.getReadableDatabaseInstance();
         Cursor cursor = db.rawQuery(selectQuery, null);
 
         if (cursor.moveToFirst()) {
@@ -912,7 +862,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
     // Update a notification
     public int updateNotification(Notification notification) {
-        SQLiteDatabase db = this.getWritableDatabase();
+        SQLiteDatabase db = this.getWritableDatabaseInstance();
         ContentValues values = new ContentValues();
         values.put(COLUMN_NOTIFICATION_TASKID, notification.getTaskID());
         values.put(COLUMN_NOTIFICATION_TITLE, notification.getTitle());
@@ -927,7 +877,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
     // Delete a notification
     public int deleteNotification(int id) {
-        SQLiteDatabase db = this.getWritableDatabase();
+        SQLiteDatabase db = this.getWritableDatabaseInstance();
         int rowsAffected = db.delete(TABLE_NOTIFICATION_NAME, COLUMN_NOTIFICATION_ID + " = ?", new String[]{String.valueOf(id)});
         db.close();
         return rowsAffected;
@@ -952,7 +902,7 @@ public class DBHelper extends SQLiteOpenHelper {
     public List<Notification> searchNotifications(String keyword) {
         List<Notification> notifications = new ArrayList<>();
         String selectQuery = "SELECT * FROM " + TABLE_NOTIFICATION_NAME + " WHERE " + COLUMN_NOTIFICATION_TITLE + " LIKE '%" + keyword + "%' OR " + COLUMN_NOTIFICATION_CONTENT + " LIKE '%" + keyword + "%'";
-        SQLiteDatabase db = this.getReadableDatabase();
+        SQLiteDatabase db = this.getReadableDatabaseInstance();
         Cursor cursor = db.rawQuery(selectQuery, null);
 
         if (cursor.moveToFirst()) {
@@ -969,7 +919,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
     // Delete all notifications
     public void deleteAllNotifications() {
-        SQLiteDatabase db = this.getWritableDatabase();
+        SQLiteDatabase db = this.getWritableDatabaseInstance();
         db.delete(TABLE_NOTIFICATION_NAME, null, null);
         db.close();
     }
@@ -1005,7 +955,7 @@ public class DBHelper extends SQLiteOpenHelper {
         }
         Log.d(TAG, "selectQuery: " + selectQuery);
 
-        SQLiteDatabase db = this.getReadableDatabase();
+        SQLiteDatabase db = this.getReadableDatabaseInstance();
         Cursor cursor = db.rawQuery(selectQuery, null);
 
         if (cursor.moveToFirst()) {

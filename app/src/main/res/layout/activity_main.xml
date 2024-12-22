@@ -3,10 +3,10 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/main"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
     android:background="@drawable/background"
     android:paddingTop="32dp"
-    android:paddingBottom="15dp">
+    android:paddingBottom="15dp"
+    android:layout_height="match_parent">
 
     <!--     Container to replace fragments-->
     <FrameLayout
@@ -44,16 +44,19 @@
         app:mbn_shadowColor="@color/shadowColor" />
 
 
+
+
+
     <LinearLayout
         android:id="@+id/submenu_navbar_container"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
         android:layout_marginHorizontal="30dp"
         android:layout_marginBottom="80dp"
-        android:background="@drawable/submenu_container_shadow"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_alignParentBottom="true"
         android:orientation="vertical"
+        android:background="@drawable/submenu_container_shadow"
         android:padding="8dp"
         android:visibility="gone">
 
@@ -62,39 +65,25 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:weightSum="2">
+            android:weightSum="1">
 
             <!-- Create Task Button -->
             <TextView
                 android:id="@+id/btnCreateTask"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_margin="8dp"
                 android:layout_weight="1"
-                android:background="@drawable/submenu_rounded_card"
-                android:drawableLeft="@drawable/navbar_ic_add"
                 android:gravity="center"
                 android:padding="15dp"
+                android:background="@drawable/submenu_rounded_card"
                 android:text="Tạo việc"
                 android:textColor="#e48fff"
                 android:textSize="16sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:drawableLeft="@drawable/navbar_ic_add"
+                android:layout_margin="8dp" />
 
             <!-- Edit Template Button -->
-            <TextView
-                android:id="@+id/btnEditTemplate"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_margin="8dp"
-                android:layout_weight="1"
-                android:background="@drawable/submenu_rounded_card"
-                android:drawableLeft="@drawable/navbar_ic_excel"
-                android:gravity="center"
-                android:padding="12dp"
-                android:text="Sửa tệp mẫu"
-                android:textColor="#1d6d43"
-                android:textSize="16sp"
-                android:textStyle="bold" />
         </LinearLayout>
 
 
@@ -110,32 +99,32 @@
                 android:id="@+id/btnImportFile"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_margin="8dp"
                 android:layout_weight="1"
-                android:background="@drawable/submenu_rounded_card"
-                android:drawableLeft="@drawable/navbar_ic_import"
                 android:gravity="center"
                 android:padding="15dp"
+                android:background="@drawable/submenu_rounded_card"
                 android:text="Nhập từ tệp"
                 android:textColor="#1CC3D6"
                 android:textSize="16sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:drawableLeft="@drawable/navbar_ic_import"
+                android:layout_margin="8dp" />
 
             <!-- Export File Button -->
             <TextView
                 android:id="@+id/btnExportFile"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_margin="8dp"
                 android:layout_weight="1"
-                android:background="@drawable/submenu_rounded_card"
-                android:drawableLeft="@drawable/navbar_ic_export"
                 android:gravity="center"
                 android:padding="12dp"
+                android:background="@drawable/submenu_rounded_card"
                 android:text="Xuất ra tệp"
                 android:textColor="#ffb017"
                 android:textSize="16sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:drawableLeft="@drawable/navbar_ic_export"
+                android:layout_margin="8dp" />
         </LinearLayout>
     </LinearLayout>
 

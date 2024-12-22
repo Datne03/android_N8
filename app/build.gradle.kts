@@ -70,4 +70,9 @@ dependencies {
 
     implementation("org.projectlombok:lombok:1.18.30")
     annotationProcessor("org.projectlombok:lombok:1.18.30")
+
+    implementation("org.apache.poi:poi:5.2.2")
+    implementation("org.apache.poi:poi-ooxml:5.2.2")
+    implementation("org.apache.commons:commons-collections4:4.4")
+
 }

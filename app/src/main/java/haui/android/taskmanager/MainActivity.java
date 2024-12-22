@@ -6,6 +6,7 @@ import android.app.NotificationManager;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -17,6 +18,7 @@ import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -33,14 +35,17 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
 import haui.android.taskmanager.controller.DBHelper;
-import haui.android.taskmanager.controller.ExcelReader;
+    import haui.android.taskmanager.controller.ExcelReader;
+import haui.android.taskmanager.controller.ExcelWriter;
 import haui.android.taskmanager.models.Status;
 import haui.android.taskmanager.models.Tag;
+import haui.android.taskmanager.models.Task;
 import haui.android.taskmanager.notification.NotificationScheduler;
 import haui.android.taskmanager.views.CalendarFragment;
 import haui.android.taskmanager.views.CreateTaskFragment;
@@ -74,7 +79,7 @@ public class MainActivity extends AppCompatActivity {
         bottomNavigation = findViewById(R.id.bottom_navigation);
         subMenuContainer = findViewById(R.id.submenu_navbar_container);
 
-        findViewById(R.id.btnEditTemplate).setOnClickListener(v -> openTemplateForEditing());
+       // findViewById(R.id.btnEditTemplate).setOnClickListener(v -> openTemplateForEditing());
         findViewById(R.id.btnImportFile).setOnClickListener(v -> openFilePicker());
 
         // Add navigation items
@@ -170,6 +175,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         // Set default selection
+        // bottomNavigation.setCount(1, "5");
         bottomNavigation.show(1, true);
         openFragment(new HomeFragment(), -1, -1);
         subMenuContainer.setVisibility(View.GONE);
@@ -220,7 +226,7 @@ public class MainActivity extends AppCompatActivity {
 //        bottomSheetDialog.setContentView(sheetView);
 
         TextView btnCreateTask = subMenuContainer.findViewById(R.id.btnCreateTask);
-        TextView btnEditTemplate = subMenuContainer.findViewById(R.id.btnEditTemplate);
+       // TextView btnEditTemplate = subMenuContainer.findViewById(R.id.btnEditTemplate);
         TextView btnImportFile = subMenuContainer.findViewById(R.id.btnImportFile);
         TextView btnExportFile = subMenuContainer.findViewById(R.id.btnExportFile);
 
@@ -231,12 +237,12 @@ public class MainActivity extends AppCompatActivity {
             subMenuContainer.setVisibility(View.GONE);
         });
 
-        btnEditTemplate.setOnClickListener(v -> {
-            // Handle Reminder button click
-//            bottomSheetDialog.dismiss();
-            openTemplateForEditing();
-            subMenuContainer.setVisibility(View.GONE);
-        });
+//        btnEditTemplate.setOnClickListener(v -> {
+//            // Handle Reminder button click
+////            bottomSheetDialog.dismiss();
+//            openTemplateForEditing();
+//            subMenuContainer.setVisibility(View.GONE);
+//        });
 
         btnImportFile.setOnClickListener(v -> {
             // Handle Create Task button click
@@ -248,16 +254,14 @@ public class MainActivity extends AppCompatActivity {
         btnExportFile.setOnClickListener(v -> {
             // Handle Create Task button click
 //            bottomSheetDialog.dismiss();
+            exportDataToExcel();
             subMenuContainer.setVisibility(View.GONE);
         });
 
 //        bottomSheetDialog.show();
     }
 
-
-
-
-
+    //@RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
     private void requestPermissions() {
         String[] permissions = {
                 android.Manifest.permission.READ_EXTERNAL_STORAGE,
@@ -283,17 +287,82 @@ public class MainActivity extends AppCompatActivity {
     private void openFilePicker() {
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
-        intent.setType("application/vnd.ms-excel"); // Only .xls files
-        String[] mimeTypes = {"application/vnd.ms-excel", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"};
+
+        // Allow both .xls and .xlsx file types
+        String[] mimeTypes = {
+                "application/vnd.ms-excel", // .xls files
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" // .xlsx files
+        };
+
+        intent.setType("*/*"); // Allow any file type initially
         intent.putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes);
+
         filePickerLauncher.launch(intent);
     }
+
+    private void exportDataToExcel() {
+        String fileName = "tasks_export.xlsx";
+        File externalFile = new File(getExternalFilesDir(null), fileName);
+
+        try {
+            // Lấy dữ liệu từ database
+            DBHelper dbHelper = new DBHelper(this);
+            List<Task> tasks = dbHelper.getAllTasks();
+
+            // Chuyển dữ liệu thành dạng danh sách String[]
+            List<String[]> data = new ArrayList<>();
+            for (Task task : tasks) {
+                Tag tag = dbHelper.getTagById(task.getTagID());
+                Status status = dbHelper.getStatus(task.getStatusID());
+
+                data.add(new String[]{
+                        task.getTaskName(),
+                        task.getDescription(),
+                        task.getStartDate(),
+                        task.getStartTime(),
+                        task.getEndDate(),
+                        task.getEndTime(),
+                        String.valueOf(task.getPriority()),
+                        tag != null ? tag.getTagName() : "N/A",
+                        status != null ? status.getStatusName() : "N/A"
+                });
+            }
+
+            // Sử dụng ExcelWriter để ghi dữ liệu ra file
+            ExcelWriter.writeTasksToExcel(externalFile, data, "Tasks");
+
+            // Mở file Excel sau khi xuất
+            openExcelFile(externalFile);
+
+        } catch (Exception e) {
+            Log.e(TAG, "Error exporting data to Excel: ", e);
+            showAlert("Lỗi khi xuất dữ liệu: " + e.getMessage());
+        }
+    }
+
+    private void openExcelFile(File file) {
+        Uri uri = FileProvider.getUriForFile(this, "haui.android.taskmanager.fileprovider", file);
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setDataAndType(uri, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        try {
+            startActivity(Intent.createChooser(intent, "Chọn ứng dụng để mở tệp"));
+        } catch (Exception e) {
+            Toast.makeText(this, "Không tìm thấy ứng dụng nào để mở tệp Excel.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
 
     private void readExcelFileFromUri(Uri uri) {
         try {
             InputStream inputStream = getContentResolver().openInputStream(uri);
             if (inputStream != null) {
                 List<String> sheetContent = ExcelReader.readExcelFile(inputStream);
+
+                if (sheetContent.isEmpty() || sheetContent.size() <= 1) {
+                    Toast.makeText(this, "File Excel không có dữ liệu!", Toast.LENGTH_SHORT).show();
+                    return;
+                }
 
                 DBHelper dbHelper = new DBHelper(this);
                 try {
@@ -390,9 +459,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-
-
-
     private void showAlert(String message) {
         new AlertDialog.Builder(this)
                 .setTitle("Thông báo")
@@ -426,10 +492,6 @@ public class MainActivity extends AppCompatActivity {
                 "Hết hạn: " + taskName, taskDescription,
                 endTimeMillis);
     }
-
-
-
-
 
 
     public void openTemplateForEditing() {
