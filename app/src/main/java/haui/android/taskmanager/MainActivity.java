@@ -62,6 +62,9 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
     private ActivityResultLauncher<Intent> filePickerLauncher;
 
+    private static final int REQUEST_CODE_TEMPLATE_EDIT = 1001;
+    private static final int REQUEST_CODE_FILE_PICKER = 1001;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -247,7 +250,7 @@ public class MainActivity extends AppCompatActivity {
         btnImportFile.setOnClickListener(v -> {
             // Handle Create Task button click
 //            bottomSheetDialog.dismiss();
-            openFilePicker();
+            openFilePickerWithTemplateEdit();
             subMenuContainer.setVisibility(View.GONE);
         });
 
@@ -261,11 +264,11 @@ public class MainActivity extends AppCompatActivity {
 //        bottomSheetDialog.show();
     }
 
-    //@RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
+    @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
     private void requestPermissions() {
         String[] permissions = {
-                android.Manifest.permission.READ_EXTERNAL_STORAGE,
-                android.Manifest.permission.POST_NOTIFICATIONS,
+                Manifest.permission.READ_EXTERNAL_STORAGE,
+                Manifest.permission.POST_NOTIFICATIONS,
                 Manifest.permission.USE_EXACT_ALARM
         };
 
@@ -280,26 +283,167 @@ public class MainActivity extends AppCompatActivity {
         if (!allPermissionsGranted) {
             ActivityCompat.requestPermissions(this, permissions, REQUEST_CODE_PERMISSIONS);
         } else {
-//            openFilePicker();
+            openFilePicker(); // Chỉ mở file picker khi quyền đã được cấp
         }
     }
+
+
 
     private void openFilePicker() {
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
 
-        // Allow both .xls and .xlsx file types
+        intent.setType("application/vnd.ms-excel");
+
         String[] mimeTypes = {
-                "application/vnd.ms-excel", // .xls files
-                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" // .xlsx files
+                "application/vnd.ms-excel",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         };
 
-        intent.setType("*/*"); // Allow any file type initially
         intent.putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes);
-
         filePickerLauncher.launch(intent);
     }
+    private void openFilePickerWithTemplateEdit() {
+        String templateFileName = "task_template.xlsx";
+        File externalFile = new File(getExternalFilesDir(null), templateFileName);
 
+        if (!externalFile.exists()) {
+            try {
+                InputStream is = getAssets().open(templateFileName);
+                FileOutputStream os = new FileOutputStream(externalFile);
+                byte[] buffer = new byte[1024];
+                int length;
+                while ((length = is.read(buffer)) > 0) {
+                    os.write(buffer, 0, length);
+                }
+                is.close();
+                os.close();
+            } catch (Exception e) {
+                showAlert("Lỗi khi sao chép file mẫu.");
+                return;
+            }
+        }
+
+        // Mở file mẫu để chỉnh sửa
+        Uri uri = FileProvider.getUriForFile(this, "haui.android.taskmanager.fileprovider", externalFile);
+        Intent editIntent = new Intent(Intent.ACTION_EDIT);
+        editIntent.setDataAndType(uri, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        editIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
+        Intent chooser = Intent.createChooser(editIntent, "Chỉnh sửa mẫu Excel");
+        startActivityForResult(chooser, REQUEST_CODE_TEMPLATE_EDIT);
+    }
+
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == REQUEST_CODE_TEMPLATE_EDIT) {
+            if (resultCode == RESULT_OK || resultCode == RESULT_CANCELED) {
+                // Mở file picker sau khi chỉnh sửa file mẫu
+                openFilePicker();
+            } else {
+                showAlert("Chỉnh sửa tệp mẫu thất bại hoặc bị hủy.");
+            }
+        } else if (requestCode == REQUEST_CODE_FILE_PICKER) { // Đổi từ 'REQUEST_CODE_TEMPLATE_EDIT'
+            if (resultCode == RESULT_OK && data != null) { // Xóa 'result' và sử dụng trực tiếp 'data'
+                Uri uri = data.getData();
+                if (uri != null) {
+                    readExcelFileFromUri(uri);
+                } else {
+                    showAlert("Không tìm thấy file được chọn.");
+                }
+            } else {
+                showAlert("Chọn file thất bại hoặc bị hủy.");
+            }
+        }
+    }
+
+    private void readExcelFileFromUri(Uri uri) {
+        try {
+            InputStream inputStream = getContentResolver().openInputStream(uri);
+            if (inputStream != null) {
+                List<String> sheetContent = ExcelReader.readExcelFile(inputStream);
+
+                DBHelper dbHelper = new DBHelper(this);
+                for (String row : sheetContent) {
+                    try {
+                        String[] cell = row.split("\\|");
+
+                        String name = cell[0];
+                        String description = cell[1];
+                        String startDate = cell[2];
+                        String startTime = cell[3];
+                        String endDate = cell[4];
+                        String endTime = cell[5];
+                        int priority = 1; // Mặc định 1, có thể chỉnh sửa sau
+                        int selectedTagId;
+                        String tagName = cell[7];
+                        int statusId;
+                        String statusName = cell[8];
+
+                        // Xử lý tag
+                        Tag tag = dbHelper.getTagByTagName(tagName);
+                        if (tag != null) {
+                            selectedTagId = tag.getTagID();
+                        } else {
+                            Tag newTag = new Tag(0, tagName, "");
+                            selectedTagId = (int) dbHelper.addTag(newTag);
+                        }
+
+                        // Xử lý status
+                        Status status = dbHelper.getStatusByName(statusName);
+                        if (status != null) {
+                            statusId = status.getStatusID();
+                        } else {
+                            statusId = (int) dbHelper.addStatus(tagName);
+                        }
+
+                        // Xử lý ngày tháng
+                        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault());
+                        Date startDateTime = dateFormat.parse(startDate + " " + startTime);
+                        Date endDateTime = dateFormat.parse(endDate + " " + endTime);
+
+                        if (endDateTime.before(startDateTime)) {
+                            showAlert("Ngày kết thúc phải sau ngày bắt đầu!");
+                            return;
+                        } else if (endDateTime.equals(startDateTime)) {
+                            showAlert("Thời gian kết thúc phải sau thời gian bắt đầu!");
+                            return;
+                        }
+
+                        long taskId = dbHelper.insertTask(name, description, startDate, startTime, endDate, endTime, priority, statusId, selectedTagId);
+
+                        if (taskId != -1) {
+                            showAlert("Thêm task thành công.");
+                            scheduleTaskNotifications((int) taskId, name, description, startDateTime, endDateTime);
+                        } else {
+                            showAlert("Có lỗi xảy ra khi thêm task.");
+                        }
+                    } catch (Exception e) {
+                        Log.e(TAG, "Lỗi xử lý hàng: " + row, e);
+                    }
+                }
+                inputStream.close();
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Lỗi khi đọc file Excel: ", e);
+        }
+    }
+
+
+    private void openExcelFile(File file) {
+        Uri uri = FileProvider.getUriForFile(this, "haui.android.taskmanager.fileprovider", file);
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setDataAndType(uri, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        try {
+            startActivity(Intent.createChooser(intent, "Chọn ứng dụng để mở tệp"));
+        } catch (Exception e) {
+            Toast.makeText(this, "Không tìm thấy ứng dụng nào để mở tệp Excel.", Toast.LENGTH_SHORT).show();
+        }
+    }
     private void exportDataToExcel() {
         String fileName = "tasks_export.xlsx";
         File externalFile = new File(getExternalFilesDir(null), fileName);
@@ -340,103 +484,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void openExcelFile(File file) {
-        Uri uri = FileProvider.getUriForFile(this, "haui.android.taskmanager.fileprovider", file);
-        Intent intent = new Intent(Intent.ACTION_VIEW);
-        intent.setDataAndType(uri, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-        try {
-            startActivity(Intent.createChooser(intent, "Chọn ứng dụng để mở tệp"));
-        } catch (Exception e) {
-            Toast.makeText(this, "Không tìm thấy ứng dụng nào để mở tệp Excel.", Toast.LENGTH_SHORT).show();
-        }
-    }
 
-
-    private void readExcelFileFromUri(Uri uri) {
-        try {
-            InputStream inputStream = getContentResolver().openInputStream(uri);
-            if (inputStream != null) {
-                List<String> sheetContent = ExcelReader.readExcelFile(inputStream);
-
-                if (sheetContent.isEmpty() || sheetContent.size() <= 1) {
-                    Toast.makeText(this, "File Excel không có dữ liệu!", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-
-                DBHelper dbHelper = new DBHelper(this);
-                try {
-                    for (String row : sheetContent) {
-                        String[] cell = row.split("\\|");
-
-                        String name = cell[0];
-                        String description = cell[1];
-                        String startDate = cell[2];
-                        String startTime = cell[3];
-                        String endDate = cell[4];
-                        String endTime = cell[5];
-                        int priority = 1;   // Integer.parseInt(cell[6])
-                        int selectedTagId; // = Integer.parseInt(cell[4]);
-                        String tagName = cell[7];
-                        int statusId;   //  = Integer.parseInt(cell[6]);
-                        String statusName = cell[8];
-
-                        Tag tag = dbHelper.getTagByTagName(tagName);
-                        if (tag != null) {
-                            selectedTagId = tag.getTagID();
-                        }
-                        else {
-                            Tag newTag = new Tag(0, tagName, "");
-                            selectedTagId = (int)dbHelper.addTag(newTag);
-                        }
-
-                        Status status = dbHelper.getStatusByName(statusName);
-                        if (status != null)
-                            statusId = status.getStatusID();
-                        else
-                            statusId = (int)dbHelper.addStatus(tagName);
-
-                        Date startDateTime;
-                        Date endDateTime;
-                        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault());
-                        try {
-                            // Chuyển đổi chuỗi ngày giờ thành đối tượng Date
-                            startDateTime = dateFormat.parse(startDate + " " + startTime);
-                            endDateTime = dateFormat.parse(endDate + " " + endTime);
-
-                            if (endDateTime.before(startDateTime)) {
-                                showAlert("Ngày kết thúc phải sau ngày bắt đầu!");
-                                return;
-                            } else if (endDateTime.equals(startDateTime)) {
-                                showAlert("Thời gian kết thúc phải sau thời gian bắt đầu!");
-                                return;
-                            }
-
-                        } catch (ParseException e) {
-                            e.printStackTrace();
-                            showAlert("Định dạng ngày giờ không hợp lệ!");
-                            return;
-                        }
-
-                        long taskId = dbHelper.insertTask(name, description, startDate, startTime, endDate, endTime, priority, statusId, selectedTagId);
-
-                        if (taskId != -1) {
-                            showAlert("Thêm task thành công.");
-                            scheduleTaskNotifications((int)taskId, name, description, startDateTime, endDateTime);
-                        } else {
-                            showAlert("Có lỗi xảy ra khi thêm task.");
-                        }
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-
-                inputStream.close();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
