@@ -1,24 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/item_work"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:orientation="horizontal"
+    android:layout_margin="5dp"
     android:background="@drawable/border_item_list_task"
-    android:paddingTop="12dp"
-    android:paddingBottom="12dp"
-    android:paddingLeft="8dp"
-    android:paddingRight="8dp"
-    android:layout_margin="12dp"
-    android:id="@+id/item_work"
+    android:orientation="horizontal"
     app:cardCornerRadius="20dp">
 
     <androidx.appcompat.widget.LinearLayoutCompat
-        android:paddingTop="10dp"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        android:paddingLeft="20dp">
+        android:paddingLeft="20dp"
+
+        android:paddingTop="10dp"
+
+        android:paddingRight="20dp">
 
         <TextView
             android:id="@+id/task_txt_title"
@@ -26,26 +25,38 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="8dp"
             android:text="Làm bài tập"
-            android:textStyle="bold"
             android:textColor="@color/black"
-            android:textSize="20dp" />
+            android:textSize="20sp"
+            android:textStyle="bold" />
 
+        <!--        edit-->
         <TextView
             android:id="@+id/task_txt_decription"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="8dp"
+
+            android:ellipsize="end"
+            android:singleLine="true"
+
+
             android:text="Hoàn thành bài tập lớn Android"
             android:textColor="#6A6A6A"
-            android:textSize="16dp" />
+            android:textSize="16sp" />
+        <!--        end edit-->
 
+        <!--        edit-->
         <TextView
             android:id="@+id/task_txt_time"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
             android:alpha="0.8"
             android:text="Today At 16:45"
-            android:paddingBottom="10dp"
-            android:textSize="14dp" />
+
+            android:textSize="12sp"
+
+            />
+        <!--        end edit-->
     </androidx.appcompat.widget.LinearLayoutCompat>
 </androidx.cardview.widget.CardView>
