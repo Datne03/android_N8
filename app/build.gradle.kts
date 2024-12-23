@@ -54,6 +54,9 @@ dependencies {
 
     // R.W Excel: jxl-2.6.jar
     implementation(files("libs/jxl.jar"))
+    implementation ("org.apache.poi:poi:5.2.3")
+    implementation ("org.apache.poi:poi-ooxml:5.2.3")
+
 
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("com.google.android.material:material:1.10.0")
@@ -71,8 +74,7 @@ dependencies {
     implementation("org.projectlombok:lombok:1.18.30")
     annotationProcessor("org.projectlombok:lombok:1.18.30")
 
-    implementation("org.apache.poi:poi:5.2.2")
-    implementation("org.apache.poi:poi-ooxml:5.2.2")
+
     implementation("org.apache.commons:commons-collections4:4.4")
 
 }

@@ -66,6 +66,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_CODE_FILE_PICKER = 1001;
 
 
+    @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.d(TAG, "onCreate: 0");
@@ -264,7 +265,7 @@ public class MainActivity extends AppCompatActivity {
 //        bottomSheetDialog.show();
     }
 
-//    @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
+    @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
     private void requestPermissions() {
         String[] permissions = {
                 Manifest.permission.READ_EXTERNAL_STORAGE,
@@ -346,8 +347,8 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 showAlert("Chỉnh sửa tệp mẫu thất bại hoặc bị hủy.");
             }
-        } else if (requestCode == REQUEST_CODE_FILE_PICKER) { // Đổi từ 'REQUEST_CODE_TEMPLATE_EDIT'
-            if (resultCode == RESULT_OK && data != null) { // Xóa 'result' và sử dụng trực tiếp 'data'
+        } else if (requestCode == REQUEST_CODE_FILE_PICKER) {
+            if (resultCode == RESULT_OK && data != null) {
                 Uri uri = data.getData();
                 if (uri != null) {
                     readExcelFileFromUri(uri);
@@ -359,6 +360,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+
 
     private void readExcelFileFromUri(Uri uri) {
         try {
