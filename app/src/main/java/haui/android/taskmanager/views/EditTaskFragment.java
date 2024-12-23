@@ -2,6 +2,7 @@ package haui.android.taskmanager.views;
 
 import static android.content.ContentValues.TAG;
 
+import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.app.NotificationManager;
 import android.app.TimePickerDialog;
@@ -287,17 +288,52 @@ public class EditTaskFragment extends Fragment {
         }
     }
 
+    private void showAlert(String message) {
+        new AlertDialog.Builder(getContext())
+                .setTitle("Thông báo")
+                .setMessage(message)
+                .setPositiveButton("OK", null)
+                .show();
+    }
+
 
     private void updateTask() {
         if (checkValue())
             Toast.makeText(getActivity(), "Vui lòng nhập đủ nôi dung !!!", Toast.LENGTH_SHORT).show();
         else {
+            String startDate = datestart.getText().toString().trim();
+            String startTime = timestart.getText().toString().trim();
+            String endDate = dateend.getText().toString().trim();
+            String endTime = timeend.getText().toString().trim();
+            // Kiểm tra nếu ngày kết thúc sau ngày bắt đầu
+            Date startDateTime;
+            Date endDateTime;
+            SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault());
+            try {
+                // Chuyển đổi chuỗi ngày giờ thành đối tượng Date
+                startDateTime = dateFormat.parse(startDate + " " + startTime);
+                endDateTime = dateFormat.parse(endDate + " " + endTime);
+
+                if (endDateTime.before(startDateTime)) {
+                    showAlert("Ngày kết thúc phải sau ngày bắt đầu!");
+                    return;
+                } else if (endDateTime.equals(startDateTime)) {
+                    showAlert("Thời gian kết thúc phải sau thời gian bắt đầu!");
+                    return;
+                }
+
+            } catch (ParseException e) {
+                showAlert("Định dạng ngày giờ không hợp lệ!");
+                return;
+            }
+
+
             // Xóa thông báo cũ trước khi cập nhật tác vụ
             removeOldNotifications(currentTask.getTaskID());
 
             dbHelper.updateTask(currentTask.getTaskID(), decriptionTask.getText().toString(),
-                    datestart.getText().toString(), timestart.getText().toString(),
-                    dateend.getText().toString(), timeend.getText().toString(), currentTask.getTagID());
+                    startDate, startTime,
+                    endDate, endTime, currentTask.getTagID());
 
             // Lên lịch thông báo mới với các chi tiết cập nhật
             scheduleTaskNotifications();
